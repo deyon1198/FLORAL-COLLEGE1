@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLORAL PRIVATE COLLEGE OKORO-IDIROKO</title>
+<style>
+*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif}
+body{background:#f5f7fa}
+.header{background:linear-gradient(135deg,#2c5530,#4a7c59); color:white; padding:15px; text-align:center; position:sticky; top:0; z-index:10}
+.logo{width:90px; height:90px; border-radius:50%; margin:0 auto 10px; display:block; background:white; padding:8px; object-fit:contain;}
+.nav{display:flex; justify-content:space-around; background:white; padding:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+.nav button{border:none; background:none; padding:10px; color:#2c5530; font-weight:bold; cursor:pointer}
+.tab{padding:15px; display:none}
+.tab.active{display:block}
+.card{background:white; padding:15px; margin:10px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+.btn{background:#4a7c59; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; margin-top:5px}
+input, textarea{width:100%; padding:10px; margin:5px 0; border:1px solid #ddd; border-radius:5px}
+.post-img{width:100%; border-radius:8px; margin-top:10px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="logo.png" class="logo" alt="Floral Private College Logo">
+  <h1>FLORAL PRIVATE COLLEGE</h1>
+  <p>Okoro-Idiroko, Ogun State</p>
+</div>
+
+<div class="nav">
+  <button onclick="showTab('home')">Home</button>
+  <button onclick="showTab('announce')">Announcements</button>
+  <button onclick="showTab('notes')">Notes</button>
+  <button onclick="showTab('about')">About</button>
+</div>
+
+<div id="home" class="tab active">
+  <div class="card"><h2>Welcome to Floral Private College</h2><p>Excellence in Learning</p></div>
+</div>
+
+<div id="announce" class="tab">
+  <div id="annList">Loading...</div>
+</div>
+
+<div id="notes" class="tab">
+  <div id="noteList">Loading...</div>
+</div>
+
+<div id="about" class="tab">
+  <div class="card">
+    <h2>About FLORAL PRIVATE COLLEGE</h2>
+    <p><b>Address:</b> Okoro-Idiroko, Ogun State, Nigeria</p>
+    <p><b>Email:</b> <a href="mailto:floralcollege@gmail.com">floralcollege@gmail.com</a></p>
+    <p><b>Phone:</b> <a href="tel:08129950993">0812 995 0993</a></p>
+  </div>
+</div>
+
+<script>
+// YOUR GOOGLE SHEET LINK
+let sheetUrl = 'https://docs.google.com/spreadsheets/d/1oKWyDZHQyYemsr12z7vYPBEVJJyzqZiR0k6kaCyfKxw/gviz/tq?tqx=out:csv';
+let announcements = [];
+let notes = [];
+
+function showTab(tab){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+}
+
+async function loadDataFromSheet(){
+  try{
+    let res = await fetch(sheetUrl);
+    let text = await res.text();
+    let rows = text.split('\n').slice(1);
+    
+    announcements = [];
+    notes = [];
+    
+    rows.forEach(row => {
+      if(row.trim() === '') return;
+      let cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+      cols = cols.map(c => c.replace(/"/g,''));
+      
+      if(cols[0] === 'notice'){
+        announcements.push({id:cols[1], date:cols[2], title:cols[3], text:cols[4], img:cols[5]});
+      }
+      if(cols[0] === 'note'){
+        notes.push({title:cols[3], name:cols[7], file:cols[10]});
+      }
+    });
+    loadAnn();
+    loadNotes();
+  }catch(e){
+    document.getElementById('annList').innerHTML = '<p>Error loading data. Check internet or sheet permission.</p>'
+  }
+}
+
+function loadAnn(){
+  let html = '';
+  announcements.forEach(a=>{
+    html += `<div class="card"><h3>${a.title}</h3><p>${a.text}</p>${a.img? `<img src="${a.img}" class="post-img">` : ''}<small>${a.date}</small></div>`;
+  });
+  document.getElementById('annList').innerHTML = html || '<p>No announcements yet</p>';
+}
+
+function loadNotes(){
+  let html = '';
+  notes.forEach(n=>{
+    html += `<div class="card"><h3>${n.title}</h3><a href="${n.file}" download="${n.name}" class="btn" style="text-decoration:none; display:inline-block">Download ${n.name}</a></div>`;
+  });
+  document.getElementById('noteList').innerHTML = html || '<p>No notes yet</p>';
+}
+
+loadDataFromSheet();
+showTab('home');
+</script>
+</body>
+</html>
