@@ -1,71 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FLORAL PRIVATE COLLEGE OKORO-IDIROKO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLORAL COLLEGE WALL</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
-*{margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif}
-body{background:#f5f7fa}
-.header{background:linear-gradient(135deg,#2c5530,#4a7c59); color:white; padding:15px; text-align:center}
-.logo{width:90px; height:90px; border-radius:50%; margin:0 auto 10px; display:block; background:white; padding:8px}
-.nav{display:flex; justify-content:space-around; background:white; padding:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1)}
-.nav button{border:none; background:none; padding:10px; color:#2c5530; font-weight:bold; cursor:pointer}
-.tab{padding:15px; display:none}
-.tab.active{display:block}
-.card{background:white; padding:15px; margin:10px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1)}
-.btn{background:#4a7c59; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer}
-.post-img{width:100%; border-radius:8px; margin-top:10px}
+body{font-family:Arial;background:linear-gradient(to bottom,#ffe4ec,#fff);text-align:center;padding:15px;margin:0}
+h1{color:#d63384}
+input,textarea{width:90%;padding:12px;margin:8px 0;border:2px solid #d63384;border-radius:8px;font-size:16px}
+button{background:#d63384;color:white;padding:12px 30px;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+#wall{margin-top:20px;text-align:left;max-width:600px;margin:auto}
+.post{background:white;padding:15px;margin:10px 0;border-radius:10px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}
+.post b{color:#d63384}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <h1>FLORAL PRIVATE COLLEGE</h1>
-  <p>Okoro-Idiroko, Ogun State</p>
-</div>
-
-<div class="nav">
-  <button onclick="showTab('home')">Home</button>
-  <button onclick="showTab('announce')">Announcements</button>
-  <button onclick="showTab('notes')">Notes</button>
-  <button onclick="showTab('about')">About</button>
-</div>
-
-<div id="home" class="tab active"><div class="card"><h2>Welcome</h2></div></div>
-<div id="announce" class="tab"><div id="annList">Loading...</div></div>
-<div id="notes" class="tab"><div id="noteList">Loading...</div></div>
-<div id="about" class="tab"><div class="card"><h2>About</h2><p>Okoro-Idiroko, Ogun State</p></div></div>
+<h1>🌸 FLORAL COLLEGE WALL 🌸</h1>
+<input id="name" placeholder="Your Name">
+<textarea id="msg" placeholder="Write something for FLORAL COLLEGE..." rows="3"></textarea>
+<button onclick="post()">POST</button>
+<div id="wall"><p>Loading messages...</p></div>
 
 <script>
-let sheetUrl = 'https://docs.google.com/spreadsheets/d/1oKWyDZHQyYemsr12z7vYPBEVJJyzqZiR0k6kaCyfKxw/gviz/tq?tqx=out:csv';
+const firebaseConfig = {
+  apiKey: "AIzaSyB_fake_key_replace_later",
+  authDomain: "floral-college-wall-26dba.firebaseapp.com",
+  projectId: "floral-college-wall-26dba",
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-function showTab(tab){
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
+function post(){
+  let name = document.getElementById('name').value || "Anonymous";
+  let msg = document.getElementById('msg').value;
+  if(msg.trim() === '') return alert("Type something first");
+  
+  db.collection("floral_college_wall").add({
+    name: name,
+    message: msg,
+    time: Date.now()
+  }).then(()=>{
+    document.getElementById('msg').value = '';
+  }).catch(err=>alert("Error: "+err.message));
 }
 
-async function loadDataFromSheet(){
-  let res = await fetch(sheetUrl);
-  let text = await res.text();
-  let rows = text.split('\n').slice(1);
-  
-  let announcements = [];
-  rows.forEach(row => {
-    let cols = row.split(',');
-    if(cols[0] === 'notice'){
-      announcements.push({title:cols[3], text:cols[4], date:cols[2]});
-    }
-  });
-  
+db.collection("floral_college_wall").orderBy("time","desc").onSnapshot(snap=>{
   let html = '';
-  announcements.forEach(a=>{
-    html += `<div class="card"><h3>${a.title}</h3><p>${a.text}</p><small>${a.date}</small></div>`;
+  snap.forEach(doc=>{
+    let d = doc.data();
+    html += `<div class="post"><b>${d.name}</b><p>${d.message}</p></div>`
   });
-  document.getElementById('annList').innerHTML = html || '<p>No announcements yet</p>';
-}
-
-loadDataFromSheet();
+  document.getElementById('wall').innerHTML = html || "<p>No messages yet. Be the first!</p>";
+});
 </script>
 </body>
 </html>
